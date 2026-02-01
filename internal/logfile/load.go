@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func LoadLogFiles(path string, maxKeySize, maxValueSize uint64, fileMode os.FileMode) (oldFiles []data.LogFile, maxID int, err error) {
+func LoadLogFiles(path string, maxKeySize, maxValueSize uint64, fileMode os.FileMode) (oldFiles map[int]data.LogFile, maxID int, err error) {
 	fnames, err := filepath.Glob(fmt.Sprintf("%s/*.data", path))
 	if err != nil {
 		return nil, 0, err

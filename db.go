@@ -1,7 +1,6 @@
 package lynxdb
 
 import (
-	"errors"
 	"lynxdb/internal/config"
 	"lynxdb/internal/data"
 	"lynxdb/internal/logfile"
@@ -37,15 +36,13 @@ func (db *DB) setup() error {
 	if err != nil {
 		return err
 	}
-	db.logFiles = make(map[int]data.LogFile)
-	for _, f := range oldFiles {
-		db.logFiles[f.Fid] = f
-	}
-	if err := db.loadKeyDir(maxID); err != nil {
+	db.logFiles = oldFiles
+
+	if err := db.createActiveFile(maxID); err != nil {
 		return err
 	}
 
-	if err := db.createActiveFile(maxID); err != nil {
+	if err := db.loadKeyDir(maxID); err != nil {
 		return err
 	}
 
@@ -53,8 +50,23 @@ func (db *DB) setup() error {
 }
 
 func (db *DB) loadKeyDir(maxID int) error {
-	return errors.New("implement me")
+	// TODO: use index data file to accelerate loading
+	for i := 0; i <= maxID; i++ {
+		lf := db.logFiles[i]
+		if err := db.keydir.LoadFromLogFile(lf); err != nil {
+			return err
+		}
+	}
+	return nil
 }
+
 func (db *DB) createActiveFile(maxID int) error {
-	return errors.New("implement me")
+	activeFile, err := logfile.CreateLogFile(
+		db.config.Path, maxID+1, db.config.MaxKeySize, db.config.MaxValueSize, db.config.FileMode,
+	)
+	if err != nil {
+		return err
+	}
+	db.activeFile = activeFile
+	return nil
 }
